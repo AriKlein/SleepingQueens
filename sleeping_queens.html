@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleeping Queens (OOP)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --table-bg: #0a6428;
+            --card-bg: #f0f0f0;
+            --card-border: #333;
+            --card-back-bg: #6b21a8;
+            --text-light: #ffffff;
+            --text-dark: #1f2937;
+            --player-bg: rgba(0, 0, 0, 0.2);
+            --active-player-bg: rgba(253, 224, 71, 0.3);
+            --accent-color: #f59e0b;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --modal-bg: #374151;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--table-bg);
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 1200px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        /* --- Screens & Modals --- */
+        .screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .screen-content {
+            background-color: var(--modal-bg);
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            max-width: 90%;
+        }
+
+        .screen h1 {
+            margin-top: 0;
+            color: var(--accent-color);
+            font-size: 2.5em;
+        }
+
+        .screen p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        
+        #story-message {
+            font-size: 1.4em;
+            margin-bottom: 25px;
+            color: var(--text-light);
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: var(--text-dark);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            margin: 5px;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: #fbbf24;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        #game-board {
+            width: 100%;
+            height: 100%;
+            display: none; /* Hidden until game starts */
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        /* --- Card Styles --- */
+        .card {
+            width: 70px;
+            height: 100px;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background-color: var(--card-bg);
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 6px 12px var(--shadow-color);
+        }
+        
+        .card.selected {
+            transform: translateY(-10px) scale(1.1);
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 15px var(--accent-color);
+        }
+        
+        .card .value { font-size: 24px; font-weight: 700; }
+        .card.face-down {
+            background-color: var(--card-back-bg);
+            background-image: linear-gradient(135deg, #8b5cf6 25%, transparent 25%), linear-gradient(225deg, #8b5cf6 25%, transparent 25%), linear-gradient(45deg, #8b5cf6 25%, transparent 25%), linear-gradient(315deg, #8b5cf6 25%, #6b21a8 25%);
+            background-position: 8px 0, 8px 0, 0 0, 0 0;
+            background-size: 8px 8px;
+            background-repeat: repeat;
+        }
+        .card.face-down span { display: none; }
+        .card.queen .value { color: #c026d3; }
+        .card.king { background-color: #facc15; }
+        .card.knight { background-color: #9ca3af; }
+        .card.potion { background-color: #84cc16; }
+        .card.wand { background-color: #38bdf8; }
+        .card.dragon { background-color: #ef4444; }
+        .card.jester { background-color: #ec4899; }
+        
+        /* --- Layout --- */
+        #top-players-area, #bottom-player-area { display: flex; justify-content: space-around; gap: 10px; }
+        .player-area {
+            background-color: var(--player-bg);
+            padding: 10px;
+            border-radius: 12px;
+            min-height: 150px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border: 2px solid transparent;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+        .player-area.active { border-color: var(--accent-color); background-color: var(--active-player-bg); }
+        .player-info { font-weight: 600; text-align: center; }
+        .hand, .awakened-queens { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 5px; min-height: 105px; }
+        #center-area { display: flex; justify-content: center; align-items: center; gap: 20px; padding: 20px 0; flex-grow: 1; }
+        .center-pile { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        #sleeping-queens { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; max-width: 500px; }
+        #message-area { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.8); padding: 10px 20px; border-radius: 20px; font-size: 1.1em; font-weight: 600; z-index: 50; transition: opacity 0.5s; }
+        .action-buttons { margin-top: 10px; text-align: center; min-height: 45px; }
+        .action-buttons .btn { font-size: 1em; padding: 8px 15px; margin: 0 5px; }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Screens -->
+        <div id="start-screen" class="screen">
+            <div class="screen-content">
+                <h1>Sleeping Queens</h1>
+                <p>A 2-player showdown against the AI. Wake the queens to win!</p>
+                <button id="start-game-btn" class="btn">Start Game</button>
+            </div>
+        </div>
+        <div id="game-over-screen" class="screen" style="display: none;">
+             <div class="screen-content">
+                <h1 id="winner-message"></h1>
+                <p>Thank you for playing!</p>
+                <button id="play-again-btn" class="btn">Play Again</button>
+            </div>
+        </div>
+        <div id="story-modal" class="screen" style="display: none;">
+            <div class="screen-content">
+                <p id="story-message"></p>
+                <div id="modal-buttons">
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Board -->
+        <div id="game-board">
+            <div id="top-players-area"></div>
+            <div id="center-area">
+                <div id="sleeping-queens"></div>
+                <div class="center-piles-container">
+                    <div class="center-pile"><span>Draw Pile</span><div id="draw-pile" class="card face-down"></div></div>
+                    <div class="center-pile"><span>Discard Pile</span><div id="discard-pile" class="card"></div></div>
+                </div>
+            </div>
+            <div id="bottom-player-area"></div>
+        </div>
+        <div id="message-area" style="opacity: 0;"></div>
+    </div>
+
+    <script>
+        // --- CLASSES ---
+
+        /**
+         * Represents a single card in the game.
+         */
+        class Card {
+            constructor(id, name, type) {
+                this.id = id;
+                this.name = name;
+                this.type = type;
+            }
+            
+            /** Creates a DOM element for the card. */
+            createElement(isFaceDown = false) {
+                const div = document.createElement('div');
+                div.className = `card ${this.type}`;
+                div.dataset.id = this.id;
+
+                if (isFaceDown) {
+                    div.classList.add('face-down');
+                    return div;
+                }
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'name';
+                nameSpan.textContent = this.name;
+                div.appendChild(nameSpan);
+                
+                return div;
+            }
+        }
+        
+        class QueenCard extends Card {
+            constructor(id, name, points, special = null) {
+                super(id, name, 'queen');
+                this.points = points;
+                this.special = special;
+            }
+             createElement(isFaceDown = false) {
+                const el = super.createElement(isFaceDown);
+                if (!isFaceDown) {
+                    const valueSpan = document.createElement('span');
+                    valueSpan.className = 'value';
+                    valueSpan.textContent = this.points;
+                    el.appendChild(valueSpan);
+                }
+                return el;
+            }
+        }
+        
+        class NumberCard extends Card {
+            constructor(id, value) {
+                super(id, `${value}`, 'number');
+                this.value = value;
+            }
+             createElement(isFaceDown = false) {
+                const el = super.createElement(isFaceDown);
+                if (!isFaceDown) {
+                    const valueSpan = document.createElement('span');
+                    valueSpan.className = 'value';
+                    valueSpan.textContent = this.value;
+                    el.appendChild(valueSpan);
+                }
+                return el;
+            }
+        }
+        
+        class PowerCard extends Card {
+            constructor(id, name, type) {
+                super(id, name, type);
+            }
+        }
+        
+        /**
+         * Represents a player.
+         */
+        class Player {
+            constructor(id, name, isHuman = false) {
+                this.id = id;
+                this.name = name;
+                this.isHuman = isHuman;
+                this.hand = [];
+                this.awakenedQueens = [];
+            }
+            
+            get score() {
+                return this.awakenedQueens.reduce((sum, q) => sum + q.points, 0);
+            }
+
+            hasCardType(type) {
+                return this.hand.some(c => c.type === type);
+            }
+        }
+
+        /**
+         * Manages a collection of cards.
+         */
+        class Deck {
+            constructor(cards = []) {
+                this.cards = cards;
+            }
+
+            shuffle() {
+                for (let i = this.cards.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+                }
+            }
+
+            draw() {
+                return this.cards.pop();
+            }
+
+            add(card) {
+                this.cards.push(card);
+            }
+            
+            get topCard() {
+                return this.cards[this.cards.length - 1];
+            }
+            
+            get count() {
+                return this.cards.length;
+            }
+        }
+
+        /**
+         * Main game engine.
+         */
+        class SleepingQueensGame {
+            constructor(ui) {
+                this.ui = ui;
+                this.players = [];
+                this.drawPile = new Deck();
+                this.discardPile = new Deck();
+                this.sleepingQueens = new Deck();
+                this.currentPlayerIndex = 0;
+                this.gamePhase = 'setup';
+                this.actionData = {};
+                this.selectedCards = [];
+                this.winConditions = { queens: 5, points: 50 };
+                
+                this.ui.bindStartGame(this.start.bind(this));
+                this.ui.bindPlayAgain(this.reset.bind(this));
+            }
+
+            // --- Game Setup ---
+            start() {
+                this.createDecks();
+                this.createPlayers();
+                this.dealInitialCards();
+                
+                this.gamePhase = 'playing';
+                this.currentPlayerIndex = Math.floor(Math.random() * this.players.length);
+                
+                this.ui.showGameBoard();
+                this.nextTurn();
+            }
+
+            reset() {
+                this.players = [];
+                this.drawPile = new Deck();
+                this.discardPile = new Deck();
+                this.sleepingQueens = new Deck();
+                this.actionData = {};
+                this.selectedCards = [];
+                this.ui.showStartScreen();
+            }
+
+            createPlayers() {
+                this.players.push(new Player(0, 'Player 1', true));
+                this.players.push(new Player(1, 'Player 2 (AI)'));
+            }
+
+            createDecks() {
+                const cardDefs = {
+                    queens: [
+                        { name: 'Rose Queen', points: 5, special: 'rose' }, { name: 'Heart Queen', points: 20 },
+                        { name: 'Pancake Queen', points: 15 }, { name: 'Ladybug Queen', points: 15 },
+                        { name: 'Sunflower Queen', points: 15 }, { name: 'Moon Queen', points: 10 },
+                        { name: 'Starfish Queen', points: 10 }, { name: 'Peacock Queen', points: 10 },
+                        { name: 'Cat Queen', points: 5, special: 'cat' }, { name: 'Dog Queen', points: 5, special: 'dog' },
+                        { name: 'Cake Queen', points: 5 }, { name: 'Tie-Dye Queen', points: 5 },
+                    ],
+                    kings: 8, jesters: 5, knights: 4, potions: 4, wands: 3, dragons: 3, numbers: { count: 4, values: 10 }
+                };
+
+                let mainDeck = [];
+                cardDefs.queens.forEach((q, i) => this.sleepingQueens.add(new QueenCard(`q-${i}`, q.name, q.points, q.special)));
+                for (let i = 0; i < cardDefs.kings; i++) mainDeck.push(new PowerCard(`k-${i}`, 'King', 'king'));
+                for (let i = 0; i < cardDefs.knights; i++) mainDeck.push(new PowerCard(`kn-${i}`, 'Knight', 'knight'));
+                for (let i = 0; i < cardDefs.potions; i++) mainDeck.push(new PowerCard(`po-${i}`, 'Sleeping Potion', 'potion'));
+                for (let i = 0; i < cardDefs.wands; i++) mainDeck.push(new PowerCard(`wa-${i}`, 'Magic Wand', 'wand'));
+                for (let i = 0; i < cardDefs.dragons; i++) mainDeck.push(new PowerCard(`dr-${i}`, 'Dragon', 'dragon'));
+                for (let i = 0; i < cardDefs.jesters; i++) mainDeck.push(new PowerCard(`je-${i}`, 'Jester', 'jester'));
+                for (let v = 1; v <= cardDefs.numbers.values; v++) {
+                    for (let c = 0; c < cardDefs.numbers.count; c++) mainDeck.push(new NumberCard(`n-${v}-${c}`, v));
+                }
+
+                this.drawPile = new Deck(mainDeck);
+                this.drawPile.shuffle();
+                this.sleepingQueens.shuffle();
+            }
+
+            dealInitialCards() {
+                this.players.forEach(p => this.drawCardsForPlayer(p, 5));
+            }
+            
+            // --- Turn & Game Flow ---
+            nextTurn() {
+                const lastPlayer = this.currentPlayer;
+                if (this.checkForWin(lastPlayer)) return;
+
+                if (lastPlayer.hand.length < 5) {
+                    this.drawCardsForPlayer(lastPlayer, 5 - lastPlayer.hand.length);
+                }
+
+                this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+                this.selectedCards = [];
+                
+                this.ui.updateMessage(`${this.currentPlayer.name}'s turn.`);
+                this.ui.render(this);
+                
+                if (!this.currentPlayer.isHuman && this.gamePhase === 'playing') {
+                    setTimeout(() => this.aiTakeTurn(), 1000);
+                }
+            }
+            
+            endTurn(isJesterPowerCard = false) {
+                 this.ui.render(this);
+                 if (isJesterPowerCard) {
+                    this.ui.updateMessage(`${this.currentPlayer.name} gets another turn!`);
+                    if(!this.currentPlayer.isHuman) setTimeout(() => this.aiTakeTurn(), 1000);
+                 } else {
+                    setTimeout(() => this.nextTurn(), 500);
+                 }
+            }
+
+            // --- Card Actions & Logic ---
+            playHandCard(card) {
+                const player = this.currentPlayer;
+                if (!player.isHuman || player.id !== this.currentPlayerIndex || this.gamePhase !== 'playing') return;
+
+                if (card.type === 'number') {
+                    const index = this.selectedCards.findIndex(c => c.id === card.id);
+                    if (index > -1) {
+                        this.selectedCards.splice(index, 1);
+                    } else {
+                        if (this.selectedCards.some(c => c.type !== 'number')) {
+                            this.selectedCards = [];
+                        }
+                        this.selectedCards.push(card);
+                    }
+                } else {
+                    this.selectedCards = [];
+                    this.executePowerCard(card, player);
+                }
+                this.ui.render(this);
+            }
+            
+            executePowerCard(card, player) {
+                this.moveCard(card, player.hand, this.discardPile.cards);
+                switch(card.type) {
+                    case 'king':
+                        this.gamePhase = 'selecting_queen_to_wake';
+                        this.ui.updateMessage("Select a queen to wake.");
+                        if(!player.isHuman) setTimeout(() => this.aiSelectQueenToWake(), 1000);
+                        break;
+                    case 'knight':
+                    case 'potion':
+                        const targetType = card.type === 'knight' ? 'steal' : 'sleep';
+                        const otherPlayer = this.players.find(p => p.id !== player.id);
+                        if (otherPlayer.awakenedQueens.length > 0) {
+                           this.gamePhase = `selecting_queen_to_${targetType}`;
+                           this.actionData.attacker = player;
+                           this.ui.updateMessage(`Select a queen to ${targetType}.`);
+                            if (!player.isHuman) {
+                                if(card.type === 'knight') setTimeout(() => this.aiSelectQueenToSteal(), 1000);
+                                else setTimeout(() => this.aiSelectQueenToSleep(), 1000);
+                            }
+                        } else {
+                           this.ui.updateMessage(`No queens to ${targetType}!`);
+                           this.endTurn();
+                        }
+                        break;
+                    case 'jester':
+                        this.resolveJester(player);
+                        break;
+                }
+                this.ui.render(this);
+            }
+            
+            resolveJester(player) {
+                const drawnCard = this.drawOneCardForPlayer();
+                if (!drawnCard) {
+                    this.ui.updateMessage("Draw pile is empty!");
+                    this.endTurn();
+                    return;
+                }
+                
+                const continueAction = () => {
+                    if (drawnCard instanceof NumberCard) {
+                        this.discardPile.add(drawnCard);
+                        const jesterCount = drawnCard.value;
+                        const nextPlayer = (jesterCount % 2 !== 0) ? this.players.find(p=>p.id !== player.id) : player;
+                        
+                        const wakeAction = () => {
+                            this.gamePhase = 'selecting_queen_to_wake';
+                            this.actionData.jesterPicker = nextPlayer;
+                             this.ui.render(this);
+                            if (!nextPlayer.isHuman) {
+                                setTimeout(() => this.aiSelectQueenToWake(), 1000);
+                            } 
+                        };
+
+                        this.ui.pauseForContinue(`${nextPlayer.name} gets to wake a queen!`, wakeAction);
+
+                    } else { // Power Card
+                        player.hand.push(drawnCard);
+                        this.endTurn(true);
+                    }
+                    this.ui.render(this);
+                };
+
+                const message = `${player.name} drew a ${drawnCard.name}!`;
+                this.ui.pauseForContinue(message, continueAction);
+            }
+
+            wakeQueen(queen) {
+                if (this.gamePhase !== 'selecting_queen_to_wake') return;
+                const wakingPlayer = this.actionData.jesterPicker || this.currentPlayer;
+                
+                this.moveCard(queen, this.sleepingQueens.cards, wakingPlayer.awakenedQueens);
+                this.updatePlayerScore(wakingPlayer);
+                
+                const continueAction = () => {
+                    this.checkCatDogConflict(wakingPlayer);
+                    if (queen.special === 'rose' && this.sleepingQueens.count > 0) {
+                        const roseAction = () => {
+                           this.gamePhase = 'selecting_queen_to_wake';
+                            this.ui.render(this);
+                           if (!wakingPlayer.isHuman) setTimeout(() => this.aiSelectQueenToWake(), 1000);
+                        };
+                         this.ui.pauseForContinue("Rose Queen grants another awakening!", roseAction);
+
+                    } else {
+                        this.gamePhase = 'playing';
+                        this.actionData = {};
+                        this.endTurn();
+                    }
+                     this.ui.render(this);
+                };
+                
+                const message = `${wakingPlayer.name} woke the ${queen.name}!`;
+                this.ui.pauseForContinue(message, continueAction);
+            }
+            
+            initiateAttack(targetQueen, defender) {
+                const attacker = this.currentPlayer;
+                const attackType = this.gamePhase.includes('steal') ? 'knight' : 'potion';
+                const defenseType = attackType === 'knight' ? 'dragon' : 'wand';
+                
+                this.actionData = { attacker, defender, targetQueen, attackType };
+
+                if (defender.hasCardType(defenseType)) {
+                    this.gamePhase = 'defending';
+                    this.ui.render(this);
+                    if (defender.isHuman) {
+                         this.ui.updateMessage(`You are under attack! Defend with a ${defenseType}?`);
+                    }
+                } else {
+                    this.resolveAttack(false);
+                }
+            }
+            
+            playerRespondsToDefense(doesDefend) {
+                if (!doesDefend) {
+                    this.resolveAttack(false);
+                } else {
+                    const defenseType = this.actionData.attackType === 'knight' ? 'dragon' : 'wand';
+                    const card = this.actionData.defender.hand.find(c => c.type === defenseType);
+                    this.resolveDefense(card);
+                }
+            }
+
+            resolveDefense(defenseCard) {
+                const { defender } = this.actionData;
+                this.moveCard(defenseCard, defender.hand, this.discardPile.cards);
+                
+                const continueAction = () => {
+                    this.gamePhase = 'playing';
+                    this.actionData = {};
+                    this.endTurn();
+                };
+                
+                const message = `${defender.name} defends with a ${defenseCard.name}!`;
+                this.ui.pauseForContinue(message, continueAction);
+            }
+            
+            resolveAttack(wasDefended) {
+                if (wasDefended) return;
+                const { attacker, defender, targetQueen, attackType } = this.actionData;
+                let message;
+
+                if (attackType === 'knight') {
+                    message = `${attacker.name} steals the ${targetQueen.name} from ${defender.name}!`;
+                    this.moveCard(targetQueen, defender.awakenedQueens, attacker.awakenedQueens);
+                    this.updatePlayerScore(defender);
+                    this.updatePlayerScore(attacker);
+                } else { // Potion
+                    message = `${attacker.name} puts the ${targetQueen.name} back to sleep!`;
+                    this.moveCard(targetQueen, defender.awakenedQueens, this.sleepingQueens.cards);
+                    this.sleepingQueens.shuffle();
+                    this.updatePlayerScore(defender);
+                }
+                
+                 const continueAction = () => {
+                    this.gamePhase = 'playing';
+                    this.actionData = {};
+                    this.endTurn();
+                };
+
+                this.ui.pauseForContinue(message, continueAction);
+            }
+            
+            isValidDiscard(cards) {
+                if (cards.length === 0 || cards.some(c => c.type !== 'number')) {
+                    return false;
+                }
+                if (cards.length === 1) {
+                    return true;
+                }
+                const values = cards.map(c => c.value);
+                if (new Set(values).size === 1) {
+                    return true;
+                }
+                if (cards.length > 2) {
+                    values.sort((a, b) => a - b);
+                    const sum = values.slice(0, -1).reduce((total, val) => total + val, 0);
+                    if (sum === values[values.length - 1]) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            handleDiscard() {
+                if (!this.isValidDiscard(this.selectedCards)) {
+                    this.ui.updateMessage("Invalid discard!");
+                    return;
+                }
+                const player = this.currentPlayer;
+                const discardCount = this.selectedCards.length;
+                
+                this.selectedCards.forEach(card => {
+                    this.moveCard(card, player.hand, this.discardPile.cards);
+                });
+                this.selectedCards = [];
+                
+                this.ui.updateMessage(`${player.name} discards ${discardCount} card(s).`);
+                this.drawCardsForPlayer(player, discardCount);
+                this.endTurn();
+            }
+
+            // --- Utility & Helpers ---
+            get currentPlayer() { return this.players[this.currentPlayerIndex]; }
+            
+            updatePlayerScore(player) {
+                this.ui.render(this);
+            }
+
+            checkCatDogConflict(player) {
+                const hasCat = player.awakenedQueens.some(q => q.special === 'cat');
+                const hasDog = player.awakenedQueens.some(q => q.special === 'dog');
+                if (hasCat && hasDog) {
+                     const catQueen = player.awakenedQueens.find(q => q.special === 'cat');
+                     const action = () => {
+                        this.moveCard(catQueen, player.awakenedQueens, this.sleepingQueens.cards);
+                        this.sleepingQueens.shuffle();
+                        this.updatePlayerScore(player);
+                        this.ui.render(this);
+                     }
+                     const message = `${player.name} has Cat & Dog Queens! The Cat Queen goes back to sleep.`;
+                     this.ui.pauseForContinue(message, action);
+                }
+            }
+            
+            drawCardsForPlayer(player, count) {
+                for(let i = 0; i < count; i++) {
+                    const card = this.drawOneCardForPlayer();
+                    if (card) player.hand.push(card);
+                    else break;
+                }
+            }
+
+            drawOneCardForPlayer() {
+                if (this.drawPile.count === 0) {
+                    if (this.discardPile.count <= 1) {
+                        this.ui.updateMessage("Not enough cards to reshuffle!");
+                        return null;
+                    }
+                    this.drawPile.cards = this.discardPile.cards.slice(0, -1);
+                    this.discardPile.cards = [this.discardPile.topCard];
+                    this.drawPile.shuffle();
+                    this.ui.updateMessage("Reshuffling discard pile.");
+                }
+                return this.drawPile.draw();
+            }
+
+            moveCard(card, from, to) {
+                const index = from.findIndex(c => c.id === card.id);
+                if (index > -1) {
+                    from.splice(index, 1);
+                    to.push(card);
+                }
+            }
+
+            checkForWin(player) {
+                if (!player) return false;
+                if (player.awakenedQueens.length >= this.winConditions.queens || player.score >= this.winConditions.points) {
+                    this.gameOver(player);
+                    return true;
+                }
+                if (this.sleepingQueens.count === 0) {
+                    let maxScore = -1, winners = [];
+                    this.players.forEach(p => {
+                        if (p.score > maxScore) { maxScore = p.score; winners = [p]; } 
+                        else if (p.score === maxScore) { winners.push(p); }
+                    });
+                    this.gameOver(winners[0]);
+                    return true;
+                }
+                return false;
+            }
+
+            gameOver(winner) {
+                this.gamePhase = 'game_over';
+                this.ui.showGameOverScreen(`${winner.name} Wins!`);
+            }
+
+            // --- AI Logic ---
+            aiTakeTurn() {
+                const player = this.currentPlayer;
+                let action = null, message = '';
+
+                if (player.hasCardType('king') && this.sleepingQueens.count > 0) {
+                    message = `${player.name} plays a King.`;
+                    const card = player.hand.find(c => c.type === 'king');
+                    action = () => this.executePowerCard(card, player);
+                } else if (player.hasCardType('knight') && this.players[0].awakenedQueens.length > 0) {
+                     message = `${player.name} plays a Knight.`;
+                     const card = player.hand.find(c => c.type === 'knight');
+                     action = () => this.executePowerCard(card, player);
+                } else if (player.hasCardType('potion') && this.players[0].awakenedQueens.length > 0) {
+                     message = `${player.name} plays a Potion.`;
+                     const card = player.hand.find(c => c.type === 'potion');
+                     action = () => this.executePowerCard(card, player);
+                } else if (player.hasCardType('jester')) {
+                    message = `${player.name} plays a Jester.`;
+                    const card = player.hand.find(c => c.type === 'jester');
+                    action = () => this.executePowerCard(card, player);
+                } else { 
+                    const cardToDiscard = player.hand.find(c => c.type === 'number');
+                    if(cardToDiscard) {
+                        message = `${player.name} discards a ${cardToDiscard.name}.`;
+                        action = () => {
+                            this.selectedCards = [cardToDiscard];
+                            this.handleDiscard();
+                        }
+                    } else {
+                         message = `${player.name} passes.`;
+                         action = () => this.endTurn();
+                    }
+                }
+                this.ui.pauseForContinue(message, action);
+            }
+
+            aiSelectQueenToWake() {
+                if (this.sleepingQueens.count > 0) {
+                    this.wakeQueen(this.sleepingQueens.cards[0]);
+                }
+            }
+            
+            aiSelectQueenToSteal() {
+                 const humanPlayer = this.players[0];
+                 if(humanPlayer.awakenedQueens.length > 0) {
+                    const bestQueen = humanPlayer.awakenedQueens.sort((a,b) => b.points - a.points)[0];
+                    this.initiateAttack(bestQueen, humanPlayer);
+                 } else {
+                    this.endTurn();
+                 }
+            }
+
+            aiSelectQueenToSleep() {
+                const humanPlayer = this.players[0];
+                 if(humanPlayer.awakenedQueens.length > 0) {
+                    const bestQueen = humanPlayer.awakenedQueens.sort((a,b) => b.points - a.points)[0];
+                    this.initiateAttack(bestQueen, humanPlayer);
+                 } else {
+                    this.endTurn();
+                 }
+            }
+
+        }
+        
+        /**
+         * Handles all DOM manipulation and UI updates.
+         */
+        class UI {
+            constructor() {
+                this.elements = {
+                    startScreen: document.getElementById('start-screen'),
+                    gameOverScreen: document.getElementById('game-over-screen'),
+                    gameBoard: document.getElementById('game-board'),
+                    startGameBtn: document.getElementById('start-game-btn'),
+                    playAgainBtn: document.getElementById('play-again-btn'),
+                    winnerMessage: document.getElementById('winner-message'),
+                    topPlayersArea: document.getElementById('top-players-area'),
+                    bottomPlayerArea: document.getElementById('bottom-player-area'),
+                    sleepingQueensContainer: document.getElementById('sleeping-queens'),
+                    drawPile: document.getElementById('draw-pile'),
+                    discardPile: document.getElementById('discard-pile'),
+                    messageArea: document.getElementById('message-area'),
+                    storyModal: document.getElementById('story-modal'),
+                    storyMessage: document.getElementById('story-message'),
+                    modalButtons: document.getElementById('modal-buttons'),
+                };
+            }
+            
+            bindStartGame(handler) { this.elements.startGameBtn.onclick = handler; }
+            bindPlayAgain(handler) { this.elements.playAgainBtn.onclick = handler; }
+
+            render(game) {
+                this.elements.topPlayersArea.innerHTML = '';
+                this.elements.bottomPlayerArea.innerHTML = '';
+                
+                game.players.forEach(player => {
+                    const playerArea = this.createPlayerElement(game, player);
+                    if (player.isHuman) {
+                        this.elements.bottomPlayerArea.appendChild(playerArea);
+                    } else {
+                        this.elements.topPlayersArea.appendChild(playerArea);
+                    }
+                });
+
+                this.elements.sleepingQueensContainer.innerHTML = '';
+                game.sleepingQueens.cards.forEach(queen => {
+                    const cardEl = queen.createElement(true);
+                     if (game.gamePhase === 'selecting_queen_to_wake' && (game.actionData.jesterPicker?.isHuman || game.currentPlayer.isHuman)) {
+                        cardEl.onclick = () => game.wakeQueen(queen);
+                    }
+                    this.elements.sleepingQueensContainer.appendChild(cardEl);
+                });
+
+                this.updatePiles(game);
+                this.renderActionButtons(game);
+            }
+            
+            createPlayerElement(game, player) {
+                const div = document.createElement('div');
+                div.className = 'player-area';
+                if (player.id === game.currentPlayerIndex && game.gamePhase !== 'defending') div.classList.add('active');
+                if (game.gamePhase === 'defending' && player.id === game.actionData.defender?.id) div.classList.add('active');
+
+
+                const info = document.createElement('div');
+                info.className = 'player-info';
+                info.textContent = `${player.name} - Score: ${player.score}`;
+                
+                const queensDiv = document.createElement('div');
+                queensDiv.className = 'awakened-queens';
+                player.awakenedQueens.forEach(queen => {
+                    const cardEl = queen.createElement();
+                     if ((game.gamePhase.includes('steal') || game.gamePhase.includes('sleep')) && game.currentPlayer.isHuman) {
+                        if (player.id !== game.currentPlayer.id) {
+                            cardEl.onclick = () => game.initiateAttack(queen, player);
+                        }
+                    }
+                    queensDiv.appendChild(cardEl);
+                });
+
+                const handDiv = document.createElement('div');
+                handDiv.className = 'hand';
+                player.hand.forEach(card => {
+                    const isFaceDown = !player.isHuman;
+                    const cardEl = card.createElement(isFaceDown);
+                    if (player.isHuman) {
+                        cardEl.onclick = () => game.playHandCard(card);
+                    }
+                    if (game.selectedCards.some(c => c.id === card.id)) {
+                        cardEl.classList.add('selected');
+                    }
+                    handDiv.appendChild(cardEl);
+                });
+                
+                div.append(info, queensDiv, handDiv);
+                
+                if (player.isHuman) {
+                    const actionButtonsDiv = document.createElement('div');
+                    actionButtonsDiv.className = 'action-buttons';
+                    div.appendChild(actionButtonsDiv);
+                }
+                
+                return div;
+            }
+            
+            renderActionButtons(game) {
+                 const humanPlayerArea = this.elements.bottomPlayerArea.querySelector('.player-area');
+                 if (!humanPlayerArea) return;
+                 const actionDiv = humanPlayerArea.querySelector('.action-buttons');
+                 actionDiv.innerHTML = '';
+
+                 if (game.gamePhase === 'defending' && game.actionData.defender.isHuman) {
+                    const defenseCardType = game.actionData.attackType === 'knight' ? 'Dragon' : 'Magic Wand';
+                    actionDiv.innerHTML = `
+                        <button class="btn">Use ${defenseCardType}</button>
+                        <button class="btn">Don't Defend</button>
+                    `;
+                    actionDiv.children[0].onclick = () => game.playerRespondsToDefense(true);
+                    actionDiv.children[1].onclick = () => game.playerRespondsToDefense(false);
+                    return;
+                }
+                 
+                if (game.gamePhase === 'playing' && game.currentPlayer.isHuman && game.selectedCards.length > 0) {
+                    if (game.selectedCards.every(c => c.type === 'number')) {
+                        if (game.isValidDiscard(game.selectedCards)) {
+                            actionDiv.innerHTML = `<button class="btn">Discard Selection</button>`;
+                            actionDiv.firstElementChild.onclick = () => game.handleDiscard();
+                        } else {
+                            actionDiv.innerHTML = `<button class="btn" disabled>Invalid Discard</button>`;
+                        }
+                    }
+                }
+            }
+            
+            updatePiles(game) {
+                this.elements.drawPile.dataset.count = game.drawPile.count;
+                const topDiscard = game.discardPile.topCard;
+                if (topDiscard) {
+                    const cardEl = topDiscard.createElement();
+                    this.elements.discardPile.innerHTML = cardEl.innerHTML;
+                    this.elements.discardPile.className = cardEl.className;
+                } else {
+                     this.elements.discardPile.innerHTML = '';
+                     this.elements.discardPile.className = 'card';
+                }
+            }
+
+            showGameBoard() {
+                this.elements.startScreen.style.display = 'none';
+                this.elements.gameBoard.style.display = 'flex';
+            }
+
+            showStartScreen() {
+                this.elements.gameBoard.style.display = 'none';
+                this.elements.gameOverScreen.style.display = 'none';
+                this.elements.startScreen.style.display = 'flex';
+            }
+
+            showGameOverScreen(message) {
+                this.elements.winnerMessage.textContent = message;
+                this.elements.gameOverScreen.style.display = 'flex';
+            }
+
+            updateMessage(text) {
+                console.log(text);
+                this.elements.messageArea.textContent = text;
+                this.elements.messageArea.style.opacity = '1';
+                setTimeout(() => { this.elements.messageArea.style.opacity = '0'; }, 3500);
+            }
+
+            pauseForContinue(message, handler) {
+                this.updateMessage(message);
+                this.elements.storyMessage.textContent = message;
+                this.elements.modalButtons.innerHTML = '<button class="btn">Continue</button>';
+                this.elements.modalButtons.firstElementChild.onclick = () => {
+                     this.elements.storyModal.style.display = 'none';
+                     handler();
+                }
+                this.elements.storyModal.style.display = 'flex';
+            }
+        }
+
+        // --- Initialize Game ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const ui = new UI();
+            new SleepingQueensGame(ui);
+        });
+
+    </script>
+</body>
+</html>
