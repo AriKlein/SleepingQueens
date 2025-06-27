@@ -18,6 +18,14 @@
             --accent-color: #f59e0b;
             --shadow-color: rgba(0, 0, 0, 0.2);
             --modal-bg: #374151;
+            
+            /* Dynamic Sizing Variables */
+            --card-width: 8vmin;
+            --card-height: 11.2vmin;
+            --font-size-base: 1.5vmin;
+            --font-size-lg: 2vmin;
+            --font-size-xl: 3.5vmin;
+            --gap-size: 1vmin;
         }
 
         body {
@@ -35,12 +43,33 @@
 
         #game-container {
             width: 100%;
-            max-width: 1200px;
-            height: 100vh;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            padding: 10px;
+            padding: var(--gap-size);
             box-sizing: border-box;
+            position: relative;
+        }
+
+        /* --- Audio Controls --- */
+        #audio-controls {
+            position: fixed;
+            top: 2vmin;
+            right: 2vmin;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5vmin;
+            background-color: var(--player-bg);
+            padding: 1.5vmin;
+            border-radius: 1vmin;
+            z-index: 200;
+        }
+        #audio-controls label {
+            font-size: var(--font-size-base);
+            font-weight: 600;
+        }
+        #audio-controls input[type="range"] {
+            width: 15vmin;
         }
 
         /* --- Screens & Modals --- */
@@ -57,32 +86,32 @@
             z-index: 100;
             flex-direction: column;
             text-align: center;
-            padding: 20px;
+            padding: 2vmin;
             box-sizing: border-box;
         }
 
         .screen-content {
             background-color: var(--modal-bg);
-            padding: 30px 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            padding: 3vmin 4vmin;
+            border-radius: 1.5vmin;
+            box-shadow: 0 1vmin 2.5vmin rgba(0,0,0,0.5);
             max-width: 90%;
         }
 
         .screen h1 {
             margin-top: 0;
             color: var(--accent-color);
-            font-size: 2.5em;
+            font-size: calc(var(--font-size-xl) * 1.5);
         }
 
         .screen p {
-            font-size: 1.2em;
-            margin-bottom: 20px;
+            font-size: var(--font-size-lg);
+            margin-bottom: 2vmin;
         }
         
         #story-message {
-            font-size: 1.4em;
-            margin-bottom: 25px;
+            font-size: calc(var(--font-size-lg) * 1.2);
+            margin-bottom: 2.5vmin;
             color: var(--text-light);
         }
 
@@ -90,18 +119,18 @@
             background-color: var(--accent-color);
             color: var(--text-dark);
             border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 1.2em;
+            padding: 1.2vmin 2.5vmin;
+            border-radius: 0.8vmin;
+            font-size: var(--font-size-lg);
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.2s;
-            margin: 5px;
+            margin: 0.5vmin;
         }
 
         .btn:hover:not(:disabled) {
             background-color: #fbbf24;
-            transform: translateY(-2px);
+            transform: translateY(-0.2vmin);
         }
         
         .btn:disabled {
@@ -114,88 +143,98 @@
             height: 100%;
             display: none; /* Hidden until game starts */
             flex-direction: column;
-            gap: 10px;
+            gap: var(--gap-size);
         }
         
         /* --- Card Styles --- */
         .card {
-            width: 70px;
-            height: 100px;
-            border-radius: 8px;
-            border: 1px solid var(--card-border);
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: 0.8vmin;
+            border: 0.1vmin solid var(--card-border);
             background-color: var(--card-bg);
             color: var(--text-dark);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 12px;
+            font-size: var(--font-size-base);
             font-weight: 600;
             text-align: center;
             position: relative;
             cursor: pointer;
             user-select: none;
             transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 2px 4px var(--shadow-color);
-            padding: 5px;
+            box-shadow: 0 0.2vmin 0.4vmin var(--shadow-color);
+            padding: 0.5vmin;
             box-sizing: border-box;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
         
         .card:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 6px 12px var(--shadow-color);
+            transform: translateY(-0.5vmin) scale(1.05);
+            box-shadow: 0 0.6vmin 1.2vmin var(--shadow-color);
         }
         
         .card.selected {
-            transform: translateY(-10px) scale(1.1);
-            border: 2px solid var(--accent-color);
-            box-shadow: 0 0 15px var(--accent-color);
+            transform: translateY(-1vmin) scale(1.1);
+            border: 0.2vmin solid var(--accent-color);
+            box-shadow: 0 0 1.5vmin var(--accent-color);
         }
         
-        .card .value { font-size: 24px; font-weight: 700; }
+        .card .value { font-size: var(--font-size-xl); font-weight: 700; display: none; /* Hidden by default when using images */ }
+        .card .name { display: none; /* Hidden by default when using images */ }
+        
         .card.face-down {
+            background-image: none !important; /* Ensure no card face image shows */
             background-color: var(--card-back-bg);
-            background-image: linear-gradient(135deg, #8b5cf6 25%, transparent 25%), linear-gradient(225deg, #8b5cf6 25%, transparent 25%), linear-gradient(45deg, #8b5cf6 25%, transparent 25%), linear-gradient(315deg, #8b5cf6 25%, #6b21a8 25%);
-            background-position: 8px 0, 8px 0, 0 0, 0 0;
-            background-size: 8px 8px;
-            background-repeat: repeat;
         }
-        .card.face-down span { display: none; }
-        .card.queen .value { color: #c026d3; }
-        .card.king { background-color: #facc15; }
-        .card.knight { background-color: #9ca3af; }
-        .card.potion { background-color: #84cc16; }
-        .card.wand { background-color: #38bdf8; }
-        .card.dragon { background-color: #ef4444; }
-        .card.jester { background-color: #ec4899; }
         
         /* --- Layout --- */
-        #top-players-area, #bottom-player-area { display: flex; justify-content: space-around; gap: 10px; }
+        #top-players-area, #bottom-player-area { display: flex; justify-content: space-around; gap: var(--gap-size); }
         .player-area {
             background-color: var(--player-bg);
-            padding: 10px;
-            border-radius: 12px;
-            min-height: 150px;
+            padding: var(--gap-size);
+            border-radius: 1.2vmin;
+            min-height: calc(var(--card-height) + 4 * var(--gap-size));
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            border: 2px solid transparent;
+            gap: var(--gap-size);
+            border: 0.2vmin solid transparent;
             transition: border-color 0.3s, background-color 0.3s;
         }
         .player-area.active { border-color: var(--accent-color); background-color: var(--active-player-bg); }
-        .player-info { font-weight: 600; text-align: center; }
-        .hand, .awakened-queens { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 5px; min-height: 105px; }
-        #center-area { display: flex; justify-content: center; align-items: center; gap: 20px; padding: 20px 0; flex-grow: 1; }
-        .center-pile { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        #sleeping-queens { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; max-width: 500px; }
-        #message-area { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.8); padding: 10px 20px; border-radius: 20px; font-size: 1.1em; font-weight: 600; z-index: 50; transition: opacity 0.5s; }
-        .action-buttons { margin-top: 10px; text-align: center; min-height: 45px; }
-        .action-buttons .btn { font-size: 1em; padding: 8px 15px; margin: 0 5px; }
+        .player-info { font-weight: 600; text-align: center; font-size: var(--font-size-lg); }
+        .hand, .awakened-queens { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--gap-size); min-height: var(--card-height); }
+        #center-area { display: flex; justify-content: center; align-items: center; gap: calc(var(--gap-size) * 2); padding: calc(var(--gap-size) * 2) 0; flex-grow: 1; }
+        .center-pile { display: flex; flex-direction: column; align-items: center; gap: var(--gap-size); font-size: var(--font-size-lg); }
+        #sleeping-queens { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--gap-size); max-width: calc(6 * var(--card-width) + 5 * var(--gap-size)); }
+        #message-area { position: fixed; bottom: 1vmin; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.8); padding: 1vmin 2vmin; border-radius: 2vmin; font-size: var(--font-size-lg); font-weight: 600; z-index: 50; transition: opacity 0.5s; }
+        .action-buttons { margin-top: var(--gap-size); text-align: center; min-height: calc(var(--font-size-lg) + 3 * var(--gap-size)); }
+        .action-buttons .btn { font-size: var(--font-size-base); padding: 0.8vmin 1.5vmin; }
     </style>
 </head>
 <body>
     <div id="game-container">
+        <!-- Audio -->
+        <audio id="bgm-audio" src="music/bgm.wav" loop></audio>
+        <audio id="sfx-audio" src="sfx/chime.wav"></audio>
+
+        <!-- Audio Controls -->
+        <div id="audio-controls">
+            <div>
+                <label for="bgm-volume">Music</label>
+                <input type="range" id="bgm-volume" min="0" max="1" step="0.01" value="0.5">
+            </div>
+            <div>
+                <label for="sfx-volume">SFX</label>
+                <input type="range" id="sfx-volume" min="0" max="1" step="0.01" value="0.5">
+            </div>
+        </div>
+        
         <!-- Screens -->
         <div id="start-screen" class="screen">
             <div class="screen-content">
@@ -214,9 +253,7 @@
         <div id="story-modal" class="screen" style="display: none;">
             <div class="screen-content">
                 <p id="story-message"></p>
-                <div id="modal-buttons">
-                    
-                </div>
+                <div id="modal-buttons"></div>
             </div>
         </div>
 
@@ -247,22 +284,26 @@
                 this.name = name;
                 this.type = type;
             }
+
+            get imageName() {
+                return `${this.name.toLowerCase().replace(/ /g, '_')}.bmp`;
+            }
             
-            /** Creates a DOM element for the card. */
             createElement(isFaceDown = false) {
                 const div = document.createElement('div');
-                div.className = `card ${this.type}`;
+                div.className = `card`;
                 div.dataset.id = this.id;
 
                 if (isFaceDown) {
                     div.classList.add('face-down');
-                    return div;
+                } else {
+                    div.style.backgroundImage = `url(images/${this.imageName})`;
+                    // Fallback in case images don't load
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'name';
+                    nameSpan.textContent = this.name;
+                    div.appendChild(nameSpan);
                 }
-
-                const nameSpan = document.createElement('span');
-                nameSpan.className = 'name';
-                nameSpan.textContent = this.name;
-                div.appendChild(nameSpan);
                 
                 return div;
             }
@@ -274,16 +315,6 @@
                 this.points = points;
                 this.special = special;
             }
-             createElement(isFaceDown = false) {
-                const el = super.createElement(isFaceDown);
-                if (!isFaceDown) {
-                    const valueSpan = document.createElement('span');
-                    valueSpan.className = 'value';
-                    valueSpan.textContent = this.points;
-                    el.appendChild(valueSpan);
-                }
-                return el;
-            }
         }
         
         class NumberCard extends Card {
@@ -291,16 +322,7 @@
                 super(id, `${value}`, 'number');
                 this.value = value;
             }
-             createElement(isFaceDown = false) {
-                const el = super.createElement(isFaceDown);
-                if (!isFaceDown) {
-                    const valueSpan = document.createElement('span');
-                    valueSpan.className = 'value';
-                    valueSpan.textContent = this.value;
-                    el.appendChild(valueSpan);
-                }
-                return el;
-            }
+            get imageName() { return `${this.value}.bmp`; }
         }
         
         class PowerCard extends Card {
@@ -309,9 +331,6 @@
             }
         }
         
-        /**
-         * Represents a player.
-         */
         class Player {
             constructor(id, name, isHuman = false) {
                 this.id = id;
@@ -330,9 +349,6 @@
             }
         }
 
-        /**
-         * Manages a collection of cards.
-         */
         class Deck {
             constructor(cards = []) {
                 this.cards = cards;
@@ -344,54 +360,26 @@
                     [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
                 }
             }
-
-            draw() {
-                return this.cards.pop();
-            }
-
-            add(card) {
-                this.cards.push(card);
-            }
-            
-            get topCard() {
-                return this.cards[this.cards.length - 1];
-            }
-            
-            get count() {
-                return this.cards.length;
-            }
+            draw() { return this.cards.pop(); }
+            add(card) { this.cards.push(card); }
+            get topCard() { return this.cards[this.cards.length - 1]; }
+            get count() { return this.cards.length; }
         }
 
-        /**
-         * Main game engine.
-         */
         class SleepingQueensGame {
             constructor(ui) {
                 this.ui = ui;
-                this.players = [];
-                this.drawPile = new Deck();
-                this.discardPile = new Deck();
-                this.sleepingQueens = new Deck();
-                this.currentPlayerIndex = 0;
-                this.gamePhase = 'setup';
-                this.actionData = {};
-                this.selectedCards = [];
-                this.winConditions = { queens: 5, points: 50 };
-                
                 this.ui.bindStartGame(this.start.bind(this));
                 this.ui.bindPlayAgain(this.reset.bind(this));
+                this.reset();
             }
 
             // --- Game Setup ---
             start() {
-                this.createDecks();
-                this.createPlayers();
-                this.dealInitialCards();
-                
                 this.gamePhase = 'playing';
-                this.currentPlayerIndex = Math.floor(Math.random() * this.players.length);
-                
                 this.ui.showGameBoard();
+                this.ui.startMusic();
+                this.currentPlayerIndex = Math.floor(Math.random() * this.players.length);
                 this.nextTurn();
             }
 
@@ -402,7 +390,14 @@
                 this.sleepingQueens = new Deck();
                 this.actionData = {};
                 this.selectedCards = [];
+                this.winConditions = { queens: 5, points: 50 };
+                
+                this.createDecks();
+                this.createPlayers();
+                this.dealInitialCards();
+                
                 this.ui.showStartScreen();
+                this.ui.render(this); // Initial render for setup
             }
 
             createPlayers() {
@@ -413,12 +408,13 @@
             createDecks() {
                 const cardDefs = {
                     queens: [
-                        { name: 'Rose Queen', points: 5, special: 'rose' }, { name: 'Heart Queen', points: 20 },
-                        { name: 'Pancake Queen', points: 15 }, { name: 'Ladybug Queen', points: 15 },
-                        { name: 'Sunflower Queen', points: 15 }, { name: 'Moon Queen', points: 10 },
-                        { name: 'Starfish Queen', points: 10 }, { name: 'Peacock Queen', points: 10 },
-                        { name: 'Cat Queen', points: 5, special: 'cat' }, { name: 'Dog Queen', points: 5, special: 'dog' },
-                        { name: 'Cake Queen', points: 5 }, { name: 'Tie-Dye Queen', points: 5 },
+                        { name: 'Heart Queen', points: 20 },
+                        { name: 'Pancake Queen', points: 15 }, { name: 'Rainbow Queen', points: 15 },
+                        { name: 'Dog Queen', points: 15, special: 'dog' }, { name: 'Cat Queen', points: 15, special: 'cat' },
+                        { name: 'Peacock Queen', points: 10 }, { name: 'Moon Queen', points: 10 },
+                        { name: 'Sunflower Queen', points: 10 }, { name: 'Ladybug Queen', points: 10 },
+                        { name: 'Rose Queen', points: 5, special: 'rose' }, { name: 'Starfish Queen', points: 5 },
+                        { name: 'Cake Queen', points: 5 },
                     ],
                     kings: 8, jesters: 5, knights: 4, potions: 4, wands: 3, dragons: 3, numbers: { count: 4, values: 10 }
                 };
@@ -455,11 +451,12 @@
 
                 this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
                 this.selectedCards = [];
+                this.gamePhase = 'playing';
                 
                 this.ui.updateMessage(`${this.currentPlayer.name}'s turn.`);
                 this.ui.render(this);
                 
-                if (!this.currentPlayer.isHuman && this.gamePhase === 'playing') {
+                if (!this.currentPlayer.isHuman) {
                     setTimeout(() => this.aiTakeTurn(), 1000);
                 }
             }
@@ -484,9 +481,7 @@
                     if (index > -1) {
                         this.selectedCards.splice(index, 1);
                     } else {
-                        if (this.selectedCards.some(c => c.type !== 'number')) {
-                            this.selectedCards = [];
-                        }
+                        if (this.selectedCards.some(c => c.type !== 'number')) this.selectedCards = [];
                         this.selectedCards.push(card);
                     }
                 } else {
@@ -540,7 +535,7 @@
                     if (drawnCard instanceof NumberCard) {
                         this.discardPile.add(drawnCard);
                         const jesterCount = drawnCard.value;
-                        const nextPlayer = (jesterCount % 2 !== 0) ? this.players.find(p=>p.id !== player.id) : player;
+                        const nextPlayer = (jesterCount % 2 == 0) ? this.players.find(p=>p.id !== player.id) : player;
                         
                         const wakeAction = () => {
                             this.gamePhase = 'selecting_queen_to_wake';
@@ -569,9 +564,9 @@
                 const wakingPlayer = this.actionData.jesterPicker || this.currentPlayer;
                 
                 this.moveCard(queen, this.sleepingQueens.cards, wakingPlayer.awakenedQueens);
-                this.updatePlayerScore(wakingPlayer);
                 
                 const continueAction = () => {
+                    this.updatePlayerScore(wakingPlayer);
                     this.checkCatDogConflict(wakingPlayer);
                     if (queen.special === 'rose' && this.sleepingQueens.count > 0) {
                         const roseAction = () => {
@@ -606,7 +601,6 @@
                     if (defender.isHuman) {
                         this.ui.updateMessage(`You are under attack! Defend with a ${defenseType}?`);
                     } else {
-                        // AI automatically defends if attacked by human
                         const defenseCard = defender.hand.find(c => c.type === defenseType);
                         this.resolveDefense(defenseCard);
                     }
@@ -647,16 +641,15 @@
                 if (attackType === 'knight') {
                     message = `${attacker.name} steals the ${targetQueen.name} from ${defender.name}!`;
                     this.moveCard(targetQueen, defender.awakenedQueens, attacker.awakenedQueens);
-                    this.updatePlayerScore(defender);
-                    this.updatePlayerScore(attacker);
                 } else { // Potion
                     message = `${attacker.name} puts the ${targetQueen.name} back to sleep!`;
                     this.moveCard(targetQueen, defender.awakenedQueens, this.sleepingQueens.cards);
                     this.sleepingQueens.shuffle();
-                    this.updatePlayerScore(defender);
                 }
                 
                  const continueAction = () => {
+                    this.updatePlayerScore(defender);
+                    this.updatePlayerScore(attacker);
                     this.gamePhase = 'playing';
                     this.actionData = {};
                     this.endTurn();
@@ -666,22 +659,14 @@
             }
             
             isValidDiscard(cards) {
-                if (cards.length === 0 || cards.some(c => c.type !== 'number')) {
-                    return false;
-                }
-                if (cards.length === 1) {
-                    return true;
-                }
+                if (cards.length === 0 || cards.some(c => c.type !== 'number')) return false;
+                if (cards.length === 1) return true;
                 const values = cards.map(c => c.value);
-                if (new Set(values).size === 1) {
-                    return true;
-                }
+                if (new Set(values).size === 1) return true;
                 if (cards.length > 2) {
                     values.sort((a, b) => a - b);
                     const sum = values.slice(0, -1).reduce((total, val) => total + val, 0);
-                    if (sum === values[values.length - 1]) {
-                        return true;
-                    }
+                    if (sum === values[values.length - 1]) return true;
                 }
                 return false;
             }
@@ -845,9 +830,6 @@
 
         }
         
-        /**
-         * Handles all DOM manipulation and UI updates.
-         */
         class UI {
             constructor() {
                 this.elements = {
@@ -866,11 +848,30 @@
                     storyModal: document.getElementById('story-modal'),
                     storyMessage: document.getElementById('story-message'),
                     modalButtons: document.getElementById('modal-buttons'),
+                    bgmAudio: document.getElementById('bgm-audio'),
+                    sfxAudio: document.getElementById('sfx-audio'),
+                    bgmSlider: document.getElementById('bgm-volume'),
+                    sfxSlider: document.getElementById('sfx-volume'),
                 };
+                this.bindAudioControls();
             }
             
-            bindStartGame(handler) { this.elements.startGameBtn.onclick = handler; }
-            bindPlayAgain(handler) { this.elements.playAgainBtn.onclick = handler; }
+            bindStartGame(handler) { 
+                this.elements.startGameBtn.onclick = () => {
+                    this.playSoundEffect();
+                    handler();
+                }; 
+            }
+            bindPlayAgain(handler) { 
+                this.elements.playAgainBtn.onclick = () => {
+                    this.playSoundEffect();
+                    handler();
+                };
+            }
+            bindAudioControls() {
+                this.elements.bgmSlider.oninput = () => this.elements.bgmAudio.volume = this.elements.bgmSlider.value;
+                this.elements.sfxSlider.oninput = () => this.elements.sfxAudio.volume = this.elements.sfxSlider.value;
+            }
 
             render(game) {
                 this.elements.topPlayersArea.innerHTML = '';
@@ -889,7 +890,7 @@
                 game.sleepingQueens.cards.forEach(queen => {
                     const cardEl = queen.createElement(true);
                      if (game.gamePhase === 'selecting_queen_to_wake' && (game.actionData.jesterPicker?.isHuman || (game.currentPlayer.isHuman && !game.actionData.jesterPicker))) {
-                        cardEl.onclick = () => game.wakeQueen(queen);
+                        cardEl.onclick = () => { this.playSoundEffect(); game.wakeQueen(queen); };
                     }
                     this.elements.sleepingQueensContainer.appendChild(cardEl);
                 });
@@ -904,7 +905,6 @@
                 if (player.id === game.currentPlayerIndex && game.gamePhase !== 'defending') div.classList.add('active');
                 if (game.gamePhase === 'defending' && player.id === game.actionData.defender?.id) div.classList.add('active');
 
-
                 const info = document.createElement('div');
                 info.className = 'player-info';
                 info.textContent = `${player.name} - Score: ${player.score}`;
@@ -915,7 +915,7 @@
                     const cardEl = queen.createElement();
                      if ((game.gamePhase.includes('steal') || game.gamePhase.includes('sleep')) && game.currentPlayer.isHuman) {
                         if (player.id !== game.currentPlayer.id) {
-                            cardEl.onclick = () => game.initiateAttack(queen, player);
+                            cardEl.onclick = () => { this.playSoundEffect(); game.initiateAttack(queen, player); };
                         }
                     }
                     queensDiv.appendChild(cardEl);
@@ -927,7 +927,7 @@
                     const isFaceDown = !player.isHuman;
                     const cardEl = card.createElement(isFaceDown);
                     if (player.isHuman) {
-                        cardEl.onclick = () => game.playHandCard(card);
+                        cardEl.onclick = () => { this.playSoundEffect(); game.playHandCard(card); };
                     }
                     if (game.selectedCards.some(c => c.id === card.id)) {
                         cardEl.classList.add('selected');
@@ -958,8 +958,8 @@
                         <button class="btn">Use ${defenseCardType}</button>
                         <button class="btn">Don't Defend</button>
                     `;
-                    actionDiv.children[0].onclick = () => game.playerRespondsToDefense(true);
-                    actionDiv.children[1].onclick = () => game.playerRespondsToDefense(false);
+                    actionDiv.children[0].onclick = () => { this.playSoundEffect(); game.playerRespondsToDefense(true); };
+                    actionDiv.children[1].onclick = () => { this.playSoundEffect(); game.playerRespondsToDefense(false); };
                     return;
                 }
                  
@@ -967,7 +967,7 @@
                     if (game.selectedCards.every(c => c.type === 'number')) {
                         if (game.isValidDiscard(game.selectedCards)) {
                             actionDiv.innerHTML = `<button class="btn">Discard Selection</button>`;
-                            actionDiv.firstElementChild.onclick = () => game.handleDiscard();
+                            actionDiv.firstElementChild.onclick = () => { this.playSoundEffect(); game.handleDiscard(); };
                         } else {
                             actionDiv.innerHTML = `<button class="btn" disabled>Invalid Discard</button>`;
                         }
@@ -981,34 +981,28 @@
                 if (topDiscard) {
                     const cardEl = topDiscard.createElement();
                     this.elements.discardPile.innerHTML = cardEl.innerHTML;
-                    this.elements.discardPile.className = cardEl.className;
+                    this.elements.discardPile.className = `card ${topDiscard.type}`;
+                    this.elements.discardPile.style.backgroundImage = `url(images/${topDiscard.imageName})`;
                 } else {
                      this.elements.discardPile.innerHTML = '';
                      this.elements.discardPile.className = 'card';
+                     this.elements.discardPile.style.backgroundImage = 'none';
                 }
             }
 
-            showGameBoard() {
-                this.elements.startScreen.style.display = 'none';
-                this.elements.gameBoard.style.display = 'flex';
+            showGameBoard() { this.elements.startScreen.style.display = 'none'; this.elements.gameBoard.style.display = 'flex'; }
+            showStartScreen() { this.elements.gameBoard.style.display = 'none'; this.elements.gameOverScreen.style.display = 'none'; this.elements.startScreen.style.display = 'flex'; }
+            showGameOverScreen(message) { this.elements.winnerMessage.textContent = message; this.elements.gameOverScreen.style.display = 'flex'; }
+            updateMessage(text) { console.log(text); this.elements.messageArea.textContent = text; this.elements.messageArea.style.opacity = '1'; setTimeout(() => { this.elements.messageArea.style.opacity = '0'; }, 3500); }
+            
+            startMusic() { 
+                this.elements.bgmAudio.volume = this.elements.bgmSlider.value;
+                this.elements.bgmAudio.play().catch(e => console.error("BGM failed to play:", e));
             }
-
-            showStartScreen() {
-                this.elements.gameBoard.style.display = 'none';
-                this.elements.gameOverScreen.style.display = 'none';
-                this.elements.startScreen.style.display = 'flex';
-            }
-
-            showGameOverScreen(message) {
-                this.elements.winnerMessage.textContent = message;
-                this.elements.gameOverScreen.style.display = 'flex';
-            }
-
-            updateMessage(text) {
-                console.log(text);
-                this.elements.messageArea.textContent = text;
-                this.elements.messageArea.style.opacity = '1';
-                setTimeout(() => { this.elements.messageArea.style.opacity = '0'; }, 3500);
+            playSoundEffect() { 
+                this.elements.sfxAudio.volume = this.elements.sfxSlider.value;
+                this.elements.sfxAudio.currentTime = 0;
+                this.elements.sfxAudio.play().catch(e => console.error("SFX failed to play:", e));
             }
 
             pauseForContinue(message, handler) {
@@ -1016,6 +1010,7 @@
                 this.elements.storyMessage.textContent = message;
                 this.elements.modalButtons.innerHTML = '<button class="btn">Continue</button>';
                 this.elements.modalButtons.firstElementChild.onclick = () => {
+                     this.playSoundEffect();
                      this.elements.storyModal.style.display = 'none';
                      handler();
                 }
