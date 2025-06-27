@@ -597,14 +597,18 @@
                 const attacker = this.currentPlayer;
                 const attackType = this.gamePhase.includes('steal') ? 'knight' : 'potion';
                 const defenseType = attackType === 'knight' ? 'dragon' : 'wand';
-                
+
                 this.actionData = { attacker, defender, targetQueen, attackType };
 
                 if (defender.hasCardType(defenseType)) {
                     this.gamePhase = 'defending';
                     this.ui.render(this);
                     if (defender.isHuman) {
-                         this.ui.updateMessage(`You are under attack! Defend with a ${defenseType}?`);
+                        this.ui.updateMessage(`You are under attack! Defend with a ${defenseType}?`);
+                    } else {
+                        // AI automatically defends if attacked by human
+                        const defenseCard = defender.hand.find(c => c.type === defenseType);
+                        this.resolveDefense(defenseCard);
                     }
                 } else {
                     this.resolveAttack(false);
@@ -884,7 +888,7 @@
                 this.elements.sleepingQueensContainer.innerHTML = '';
                 game.sleepingQueens.cards.forEach(queen => {
                     const cardEl = queen.createElement(true);
-                     if (game.gamePhase === 'selecting_queen_to_wake' && (game.actionData.jesterPicker?.isHuman || game.currentPlayer.isHuman)) {
+                     if (game.gamePhase === 'selecting_queen_to_wake' && (game.actionData.jesterPicker?.isHuman || (game.currentPlayer.isHuman && !game.actionData.jesterPicker))) {
                         cardEl.onclick = () => game.wakeQueen(queen);
                     }
                     this.elements.sleepingQueensContainer.appendChild(cardEl);
