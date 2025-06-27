@@ -855,19 +855,21 @@
                 };
                 this.bindAudioControls();
             }
-            
-            bindStartGame(handler) { 
-                this.elements.startGameBtn.onclick = () => {
-                    this.playSoundEffect();
-                    handler();
-                }; 
-            }
-            bindPlayAgain(handler) { 
-                this.elements.playAgainBtn.onclick = () => {
+
+            /** Binds both click and touch events to an element for comprehensive input handling. */
+            _bindEvent(element, handler) {
+                const action = (event) => {
+                    event.preventDefault(); // Prevents default behavior like scrolling on tap and stops ghost clicks.
                     this.playSoundEffect();
                     handler();
                 };
+                element.onclick = action;
+                element.ontouchend = action;
             }
+            
+            bindStartGame(handler) { this._bindEvent(this.elements.startGameBtn, handler); }
+            bindPlayAgain(handler) { this._bindEvent(this.elements.playAgainBtn, handler); }
+
             bindAudioControls() {
                 this.elements.bgmSlider.oninput = () => this.elements.bgmAudio.volume = this.elements.bgmSlider.value;
                 this.elements.sfxSlider.oninput = () => this.elements.sfxAudio.volume = this.elements.sfxSlider.value;
@@ -890,7 +892,7 @@
                 game.sleepingQueens.cards.forEach(queen => {
                     const cardEl = queen.createElement(true);
                      if (game.gamePhase === 'selecting_queen_to_wake' && (game.actionData.jesterPicker?.isHuman || (game.currentPlayer.isHuman && !game.actionData.jesterPicker))) {
-                        cardEl.onclick = () => { this.playSoundEffect(); game.wakeQueen(queen); };
+                        this._bindEvent(cardEl, () => game.wakeQueen(queen));
                     }
                     this.elements.sleepingQueensContainer.appendChild(cardEl);
                 });
@@ -915,7 +917,7 @@
                     const cardEl = queen.createElement();
                      if ((game.gamePhase.includes('steal') || game.gamePhase.includes('sleep')) && game.currentPlayer.isHuman) {
                         if (player.id !== game.currentPlayer.id) {
-                            cardEl.onclick = () => { this.playSoundEffect(); game.initiateAttack(queen, player); };
+                            this._bindEvent(cardEl, () => game.initiateAttack(queen, player));
                         }
                     }
                     queensDiv.appendChild(cardEl);
@@ -927,7 +929,7 @@
                     const isFaceDown = !player.isHuman;
                     const cardEl = card.createElement(isFaceDown);
                     if (player.isHuman) {
-                        cardEl.onclick = () => { this.playSoundEffect(); game.playHandCard(card); };
+                        this._bindEvent(cardEl, () => game.playHandCard(card));
                     }
                     if (game.selectedCards.some(c => c.id === card.id)) {
                         cardEl.classList.add('selected');
@@ -958,8 +960,8 @@
                         <button class="btn">Use ${defenseCardType}</button>
                         <button class="btn">Don't Defend</button>
                     `;
-                    actionDiv.children[0].onclick = () => { this.playSoundEffect(); game.playerRespondsToDefense(true); };
-                    actionDiv.children[1].onclick = () => { this.playSoundEffect(); game.playerRespondsToDefense(false); };
+                    this._bindEvent(actionDiv.children[0], () => game.playerRespondsToDefense(true));
+                    this._bindEvent(actionDiv.children[1], () => game.playerRespondsToDefense(false));
                     return;
                 }
                  
@@ -967,7 +969,7 @@
                     if (game.selectedCards.every(c => c.type === 'number')) {
                         if (game.isValidDiscard(game.selectedCards)) {
                             actionDiv.innerHTML = `<button class="btn">Discard Selection</button>`;
-                            actionDiv.firstElementChild.onclick = () => { this.playSoundEffect(); game.handleDiscard(); };
+                            this._bindEvent(actionDiv.firstElementChild, () => game.handleDiscard());
                         } else {
                             actionDiv.innerHTML = `<button class="btn" disabled>Invalid Discard</button>`;
                         }
@@ -1008,12 +1010,17 @@
             pauseForContinue(message, handler) {
                 this.updateMessage(message);
                 this.elements.storyMessage.textContent = message;
-                this.elements.modalButtons.innerHTML = '<button class="btn">Continue</button>';
-                this.elements.modalButtons.firstElementChild.onclick = () => {
-                     this.playSoundEffect();
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.textContent = 'Continue';
+                this.elements.modalButtons.innerHTML = '';
+                this.elements.modalButtons.appendChild(btn);
+
+                this._bindEvent(btn, () => {
                      this.elements.storyModal.style.display = 'none';
                      handler();
-                }
+                });
+                
                 this.elements.storyModal.style.display = 'flex';
             }
         }
